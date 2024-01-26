@@ -5,13 +5,11 @@ set -o pipefail
 
 source ./env.sh
 
-OUTPUT=$(
+(
   set -e
-  OUTPUT=""
 
   function log() {
-    curr_output=$(echo $1 | tee /dev/tty)
-    OUTPUT="$OUTPUT$curr_output\n"
+    echo "$1" 
   }
 
   function try_backup() {
@@ -63,14 +61,23 @@ OUTPUT=$(
   }
   try_backup 
 
-  echo $OUTPUT
 )
+
+if [ -f "log.txt" ]; then
+  OUTPUT=$(cat log.txt)
+  rm log.txt
+else
+  OUTPUT="No Log" 
+fi
+
 
 if [ $? -ne 0 ]; then
   RESULT="failed"
 else
   RESULT="success"
 fi
+
+echo $OUTPUT
 
 if [ -n "$NOTIFICATION_URL" ]; then
   python3 -c "import requests; requests.post('$NOTIFICATION_URL', json={'message': '$OUTPUT', 'result': '$RESULT'})"
